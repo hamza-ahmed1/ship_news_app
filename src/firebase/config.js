@@ -1,6 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getStorage } from "firebase/storage";
+import { getFirestore } from "firebase/firestore";
 // get auth
 import { getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -12,17 +14,22 @@ const firebaseConfig = {
   apiKey: "AIzaSyAwDY4oTwUsVR3kPtYGnxA6ZQVySZASSYU",
   authDomain: "shipyard-app-a311c.firebaseapp.com",
   projectId: "shipyard-app-a311c",
-  storageBucket: "shipyard-app-a311c.firebasestorage.app",
+  storageBucket: "shipyard-app-a311c.appspot.com",   // ✅ FIXED
   messagingSenderId: "46875179004",
   appId: "1:46875179004:web:709c878c4a1a1d87636479",
   measurementId: "G-ZNVKRLQEYS"
 };
 
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
 
 // export auth module
 export const auth = getAuth(app);
+// export const storage = getStorage(app);
+
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 export default app;

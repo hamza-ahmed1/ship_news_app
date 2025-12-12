@@ -1,140 +1,248 @@
-import * as React from "react";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
-import CardMedia from "@mui/material/CardMedia";
-import CardContent from "@mui/material/CardContent";
-import Box from "@mui/material/Box";
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase/config";
-import { signOut } from "firebase/auth";
+import React, { useState, useEffect } from "react";
 
-const newsData = [
-  {
-    date: "12 Feb 2025",
-    companies: [
-      { 
-        name: "Maersk", 
-        img: "https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/03/Maersk_Logo.svg"
-      },
-      { 
-        name: "MSC", 
-        img: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/MSC_logo_2017.svg"
-      },
-      { 
-        name: "CMA CGM", 
-        img: "https://images.unsplash.com/photo-1605745341112-85968b19335b?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/a/a3/CMA_CGM_logo_2013.svg"
-      }
-    ]
-  },
-  {
-    date: "11 Feb 2025",
-    companies: [
-      { 
-        name: "Hapag-Lloyd", 
-        img: "https://images.unsplash.com/photo-1590433816708-f87f43fccf8b?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Hapag-Lloyd_logo.svg"
-      },
-      { 
-        name: "Evergreen", 
-        img: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/2/20/Evergreen_Marine_logo.svg"
-      }
-    ]
-  },
-  {
-    date: "10 Feb 2025",
-    companies: [
-      { 
-        name: "Maersk", 
-        img: "https://images.unsplash.com/photo-1568484876632-9e9d3f6072f1?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/0/03/Maersk_Logo.svg"
-      },
-      { 
-        name: "COSCO", 
-        img: "https://images.unsplash.com/photo-1600375257938-8c5c9bd16ee4?w=400&h=300&fit=crop",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/COSCO_logo.svg/320px-COSCO_logo.svg.png"
-      }
-    ]
-  },
-];
+import {
+
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardMedia,
+  CardContent,
+  Button,
+  TextField,
+  MenuItem,
+  Grid,
+  Chip,
+  CircularProgress,
+  Paper,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton
+} from "@mui/material";
+import { Refresh, Image as ImageIcon, Close } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase/config";
+import { signOut } from "firebase/auth";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import Navbar from "./Navbar";
+import { Download, Eye } from "lucide-react";
+
+// Separate Image Gallery Component (same as admin panel)
+function ImageGallery({ images, loading, onRefresh }) {
+  if (loading) {
+    return (
+      <Paper elevation={0} sx={{ p: 8, textAlign: 'center', bgcolor: 'grey.50' }}>
+        <CircularProgress size={48} sx={{ mb: 2 }} />
+        <Typography color="text.secondary">Loading images...</Typography>
+      </Paper>
+    );
+  }
+
+  if (images.length === 0) {
+    return (
+      <Paper elevation={0} sx={{ p: 8, textAlign: 'center', bgcolor: 'grey.50' }}>
+        <ImageIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No news images found
+        </Typography>
+        <Typography variant="body2" color="text.disabled">
+          Check your filters or upload new images
+        </Typography>
+      </Paper>
+    );
+  }
+
+  return (
+    <Grid container spacing={3}>
+      {images.map((image) => (
+        <Grid item xs={12} sm={6} md={4} key={image.id}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+              transition: "all 0.3s",
+              "&:hover": {
+                transform: "translateY(-5px)",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardMedia
+              component="img"
+              alt={image.fileName}
+              height="200"
+              image={image.url}
+              sx={{ objectFit: "cover" }}
+            />
+            <CardContent>
+              <Typography 
+                variant="subtitle1" 
+                fontWeight={600}
+                noWrap
+                title={image.fileName}
+                gutterBottom
+              >
+                {image.fileName}
+              </Typography>
+              <Chip 
+                label={image.company} 
+                size="small" 
+                color="primary" 
+                variant="outlined"
+                sx={{ mb: 1 }}
+              />
+              <Typography variant="caption" color="text.secondary" display="block">
+                {new Date(image.timestamp).toLocaleString()}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
 
 export default function LatestNews() {
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = React.useState("all");
-  const [selectedCompany, setSelectedCompany] = React.useState("all");
+  const [selectedDate, setSelectedDate] = useState("all");
+  const [selectedCompany, setSelectedCompany] = useState("all");
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // Add these states for the modal
+  const [openDialog, setOpenDialog] = useState(false);
+  const [viewImage, setViewImage] = useState(null);
 
-  // Get unique dates
-  const uniqueDates = ["all", ...newsData.map(news => news.date)];
+  useEffect(() => {
+    loadImages();
+  }, []);
 
-  // Get unique company names
-  const allCompanies = newsData.flatMap(news => news.companies.map(c => c.name));
-  const uniqueCompanies = ["all", ...new Set(allCompanies)];
+  async function loadImages() {
+    setLoading(true);
+    setError(null);
+    try {
+      const q = query(collection(db, "newsImages"), orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      const imageList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setImages(imageList);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Error loading images:", err);
+      setError("Failed to load images: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  // Filter news data
-  const filteredNews = newsData
-    .filter(news => selectedDate === "all" || news.date === selectedDate)
-    .map(news => ({
-      ...news,
-      companies: news.companies.filter(
-        company => selectedCompany === "all" || company.name === selectedCompany
-      )
-    }))
-    .filter(news => news.companies.length > 0);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/");
+  // Add this function to handle image click
+  const handleImageClick = (image) => {
+    setViewImage(image);
+    setOpenDialog(true);
   };
 
-  const handle_home = async () => {
+  // Get unique dates from images
+  const getUniqueDates = () => {
+    const dates = images.map(img => {
+      const date = new Date(img.timestamp);
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    });
+    return ["all", ...new Set(dates)];
+  };
+
+  // Get unique companies from images
+  const getUniqueCompanies = () => {
+    const companies = images.map(img => img.company);
+    return ["all", ...new Set(companies)];
+  };
+
+  const uniqueDates = getUniqueDates();
+  const uniqueCompanies = getUniqueCompanies();
+
+  // Filter images based on selected filters
+  const filteredImages = images.filter(image => {
+    const imageDate = new Date(image.timestamp).toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+    
+    const dateMatch = selectedDate === "all" || imageDate === selectedDate;
+    const companyMatch = selectedCompany === "all" || image.company === selectedCompany;
+    
+    return dateMatch && companyMatch;
+  });
+
+  // Group images by date
+  const groupedByDate = filteredImages.reduce((acc, image) => {
+    const dateKey = new Date(image.timestamp).toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(image);
+    return acc;
+  }, {});
+
+  const handleHome = () => {
     navigate("/home");
   };
+    function handleView(image) {
+    setViewImage(image);
+    setOpenDialog(true);
+  }
+const handleDownload = async (url, fileName) => {
+   setOpenDialog(false);
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
 
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName || "download";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error("Download failed", err);
+  }
+};
   return (
-    <React.Fragment>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '36px',
-          fontWeight: 'bold',
-          background: 'linear-gradient(to right, #001A62FF, #60a5fa)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          margin: '8px'
-        }}>
-          Port Operations &gt; Latest Shipping News
-        </h1>
-        
-        <Box sx={{ mb: 2 }}>
-          <Button 
-            variant="outlined" 
-            color="error" 
-            onClick={handleLogout}
-            style={{ marginRight: '10px', marginLeft: '10px' }}
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
+      <Navbar />
+      <Box sx={{ mb: 4 }}>
+        {/* Last Updated */}
+        {lastUpdated && (
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              display: 'inline-block',
+              px: 2, 
+              py: 1,
+              borderRadius: 2,
+              mb: 3
+            }}
           >
-            Logout
-          </Button>
-          <Button 
-            variant="outlined" 
-            color="primary" 
-            onClick={handle_home}
-          >
-            Home 
-          </Button>
-        </Box>
-        
-        <p style={{ color: '#94a3b8', fontSize: '18px', margin: '10px', marginBottom: '20px' }}>
-          Real-time vessel tracking and shipping management
-        </p>
+            <Typography variant="body2" fontWeight={600} color="success.dark">
+              Last Updated: {lastUpdated.toLocaleString()}
+            </Typography>
+          </Paper>
+        )}
 
         {/* Filters */}
-        <Grid container spacing={2} sx={{ mb: 3, ml: 0.5 }}>
+        <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               select
@@ -143,6 +251,7 @@ export default function LatestNews() {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               variant="outlined"
+              size="small"
             >
               {uniqueDates.map((date) => (
                 <MenuItem key={date} value={date}>
@@ -159,6 +268,7 @@ export default function LatestNews() {
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
               variant="outlined"
+              size="small"
             >
               {uniqueCompanies.map((company) => (
                 <MenuItem key={company} value={company}>
@@ -167,72 +277,108 @@ export default function LatestNews() {
               ))}
             </TextField>
           </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={loadImages}
+              disabled={loading}
+              sx={{ height: '40px' }}
+            >
+              Refresh
+            </Button>
+          </Grid>
         </Grid>
-      </div>
 
-      {/* News Display */}
-      {filteredNews.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 5 }}>
-          <Typography variant="h6" color="text.secondary">
-            No news found for the selected filters
-          </Typography>
-        </Box>
+        {/* Results Count */}
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Showing {filteredImages.length} of {images.length} images
+        </Typography>
+      </Box>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      {/* News Display - Grouped by Date */}
+      {Object.keys(groupedByDate).length === 0 ? (
+        <ImageGallery images={[]} loading={loading} onRefresh={loadImages} />
       ) : (
-        filteredNews.map((news, index) => (
-          <Box key={index} sx={{ mb: 5 }}>
+        Object.entries(groupedByDate).map(([date, dateImages]) => (
+          <Box key={date} sx={{ mb: 5 }}>
             {/* Date Header */}
             <Typography
               variant="h6"
               sx={{
-                mb: 2,
+                mb: 3,
                 color: "primary.main",
                 fontWeight: 600,
                 borderLeft: "4px solid #042546FF",
-                pl: 1.5,
+                pl: 2,
               }}
             >
-              {news.date}
+              {date}
             </Typography>
 
-            {/* Company Images Grid */}
+            {/* Images for this date */}
             <Grid container spacing={3}>
-              {news.companies.map((company, i) => (
-                <Grid item xs={12} sm={6} md={4} key={i}>
+              {dateImages.map((image) => (
+                <Grid item xs={12} sm={6} md={4} key={image.id}>
                   <Card
+                    onClick={() => handleImageClick(image)}
                     sx={{
                       borderRadius: 3,
                       boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-                      transition: "0.3s",
+                      transition: "all 0.3s",
+                      cursor: "pointer",
                       "&:hover": {
                         transform: "translateY(-5px)",
                         boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
                       },
                     }}
                   >
-                    {/* Unsplash shipping image */}
                     <CardMedia
                       component="img"
-                      alt={company.name}
+                      alt={image.fileName}
                       height="200"
-                      image={company.img}
+                      image={image.url}
                       sx={{ objectFit: "cover" }}
                     />
-                    <CardContent sx={{ textAlign: "center" }}>
-                      {/* Company logo */}
-                      <Box 
-                        component="img" 
-                        src={company.logo} 
-                        alt={company.name}
-                        sx={{ 
-                          height: '40px', 
-                          mb: 1,
-                          objectFit: 'contain',
-                          maxWidth: '100%'
-                        }}
-                      />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {company.name}
+                    <CardContent>
+                      <Typography 
+                        variant="subtitle1" 
+                        fontWeight={600}
+                        noWrap
+                        title={image.fileName}
+                        gutterBottom
+                      >
+                        {image.fileName}
                       </Typography>
+                      <Chip 
+                        label={image.company} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                        sx={{ mb: 1 }}
+                      />
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {new Date(image.timestamp).toLocaleTimeString()}
+                      </Typography>
+                  <Button size="small" startIcon={<Eye />} onClick={() => handleView(viewImage)}>View</Button>
+
+<Button
+  size="small"
+  startIcon={<Download />}
+  onClick={() => handleDownload(image.url, image.fileName)}
+  sx={{ color: "green", paddingLeft: 2 }}
+>
+  Download
+</Button>
+
                     </CardContent>
                   </Card>
                 </Grid>
@@ -241,6 +387,82 @@ export default function LatestNews() {
           </Box>
         ))
       )}
-    </React.Fragment>
+
+      {/* View Dialog - Full Image Modal */}
+      {viewImage && (
+        <Dialog 
+          open={openDialog} 
+          onClose={() => setOpenDialog(false)} 
+          maxWidth="lg" 
+          fullWidth
+        >
+          <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" component="div">
+              {viewImage.fileName}
+            </Typography>
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenDialog(false)}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+ 
+          <DialogContent dividers>
+            <Box 
+              component="img" 
+              src={viewImage.url} 
+              alt={viewImage.fileName} 
+              sx={{
+                width: "100%", 
+                height: "auto",
+                borderRadius: 2, 
+                mb: 3
+              }} 
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Company
+                </Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <Chip label={viewImage.company} color="primary" size="small" />
+                           <Button
+  size="small"
+  startIcon={<Download />}
+  onClick={() => handleDownload(viewImage.url, viewImage.fileName)}
+  sx={{ color: "green" }}
+>
+  Download
+</Button>
+                </Box>
+                
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Uploaded
+                </Typography>
+                <Typography variant="body2">
+                  {new Date(viewImage.timestamp).toLocaleString()}
+                </Typography>
+              </Box>
+              {viewImage.publicId && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Public ID
+                  </Typography>
+                  <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+                    {viewImage.publicId}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
+    </Container>
   );
 }

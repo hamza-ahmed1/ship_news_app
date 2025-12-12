@@ -6,7 +6,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { auth } from './firebase/config';
 import React from 'react';
 import LatestNews from './components/LatestNews';
-import AdminPanel from './components/AdminPanel';
+import AdminPanel from './components/AdminPanel/AdminPanel';
+import DailyVesselMovement from './components/DailyVesselMovement';
+import { CircularProgress, Box } from "@mui/material";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -21,9 +23,20 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  if (loading) {
-    return <h2>Loading...</h2>; // prevent flicker
-  }
+if (loading) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "80vh", // center vertically
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  );
+}
 
   return (
     <Router>
@@ -32,6 +45,7 @@ function App() {
         <Route path="/home" element={user ? <Home /> : <SignIn setUser={setUser}/>} />
         <Route path="/latest-news" element={user ? <LatestNews /> : <SignIn setUser={setUser}/>} />
         <Route path="/admin-panel" element={user ? <AdminPanel /> : <SignIn setUser={setUser}/>} />
+        <Route path="/daily-vessel-movement" element={user ? <DailyVesselMovement /> : <SignIn setUser={setUser}/>} />
 
       </Routes>
     </Router>
