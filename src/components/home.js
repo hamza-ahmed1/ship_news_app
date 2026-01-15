@@ -20,7 +20,7 @@ const images = [
   }
 ];
 
-const MaritimeLanding = () => {
+const MaritimeLanding = ({ setUser, user }) => {
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const MaritimeLanding = () => {
   return (
     <div style={{ background: "white", minHeight: "100vh", width: "100%" }}>
       {/* import navbar */}
-      <Navbar />
+      <Navbar setUser={setUser} user={user} />
 
    {/* ==================== THIRD ROW: HEADING ==================== */}
       <div style={{ 
@@ -81,8 +81,10 @@ const MaritimeLanding = () => {
       </div>
 
       {/* ==================== FOURTH ROW: BUTTON ==================== */}
+      {!user && (
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <button
+          onClick={() => window.location.href = '/signup'}
           style={{
             background: "#2C5D08FF",
             color: "white",
@@ -99,6 +101,7 @@ const MaritimeLanding = () => {
           Create your free Account
         </button>
       </div>
+      )}
 
       {/* ==================== FIFTH ROW: IMAGE SLIDER ==================== */}
       <div

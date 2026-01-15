@@ -7,11 +7,18 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase/config";
 import { signOut } from "firebase/auth";
 
-export default function Navbar() {
+export default function Navbar({ setUser, user }) {
       const navigate = useNavigate();
       const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/");
+    try {
+      await signOut(auth);
+      if (setUser) {
+        setUser(null);
+      }
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
     return (
        <>
@@ -93,15 +100,25 @@ export default function Navbar() {
           LOGIN
         </button> */}
          <Box sx={{ mb: 2, display: 'flex', gap: 1 , padding: "10px 22px",}}>
-                  <Button 
-                    color="error"
-                    cursor="pointer"
-                    variant="outlined"
-                    // right: "40px",
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </Button>
+                  {user ? (
+                    <Button 
+                      color="error"
+                      cursor="pointer"
+                      variant="outlined"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  ) : (
+                    <Button 
+                      color="primary"
+                      cursor="pointer"
+                      variant="outlined"
+                      onClick={() => navigate("/signin")}
+                    >
+                      Login
+                    </Button>
+                  )}
                 
              </Box>
       </div>
