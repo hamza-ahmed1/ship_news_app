@@ -104,7 +104,7 @@ function ImageGallery({ images, loading, onRefresh }) {
   );
 }
 
-export default function LatestNews() {
+export default function LatestNews({ user }) {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("all");
   const [selectedCompany, setSelectedCompany] = useState("all");
@@ -221,7 +221,7 @@ const handleDownload = async (url, fileName) => {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Navbar />
+      <Navbar user={user} />
       <Box sx={{ mb: 4 }}>
         {/* Last Updated */}
         {lastUpdated && (
