@@ -58,11 +58,21 @@ export default function Navbar() {
       icon: <CloudUpload />, 
       route: '/admin/upload-news' 
     },
-    { 
-      text: 'Daily Vessel Updates', 
-      icon: <DirectionsBoat />, 
-      route: '/admin/vessel-updates' 
-    },
+ { 
+    text: 'Daily Vessel Updates', 
+    icon: <DirectionsBoat />,
+    children: [
+      {
+        text: 'Port Qasim',
+        route: '/admin/vessel-updates/port-qasim'
+      },
+      {
+        text: 'KPT',
+        route: '/admin/vessel-updates/kpt'
+      }
+    ]
+  },
+
     { 
       text: 'Add Ship Company', 
       icon: <Business />, 
@@ -111,32 +121,72 @@ export default function Navbar() {
       <Divider />
 
       <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton 
-              onClick={() => handleMenuClick(item.route)}
-              selected={location.pathname === item.route}
-              sx={{
-                '&.Mui-selected': {
+       {menuItems.map((item) => (
+  <React.Fragment key={item.text}>
+    {/* Parent Menu Item */}
+    <ListItem disablePadding>
+      <ListItemButton
+        onClick={() => item.route && handleMenuClick(item.route)}
+        selected={item.route && location.pathname === item.route}
+        sx={{
+          '&.Mui-selected': {
+            backgroundColor: 'primary.light',
+            '&:hover': {
+              backgroundColor: 'primary.light',
+            },
+          },
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            color:
+              item.route && location.pathname === item.route
+                ? 'primary.main'
+                : 'inherit',
+          }}
+        >
+          {item.icon}
+        </ListItemIcon>
+
+        <ListItemText
+          primary={item.text}
+          primaryTypographyProps={{
+            fontWeight:
+              item.route && location.pathname === item.route ? 600 : 400,
+          }}
+        />
+      </ListItemButton>
+    </ListItem>
+
+    {/* Sub Menu Items */}
+    {item.children &&
+      item.children.map((child) => (
+        <ListItem key={child.text} disablePadding sx={{ pl: 4 }}>
+          <ListItemButton
+            onClick={() => handleMenuClick(child.route)}
+            selected={location.pathname === child.route}
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'primary.light',
+                '&:hover': {
                   backgroundColor: 'primary.light',
-                  '&:hover': {
-                    backgroundColor: 'primary.light',
-                  },
                 },
+              },
+            }}
+          >
+            <ListItemText
+              primary={child.text}
+              primaryTypographyProps={{
+                fontWeight:
+                  location.pathname === child.route ? 600 : 400,
               }}
-            >
-              <ListItemIcon sx={{ color: location.pathname === item.route ? 'primary.main' : 'inherit' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontWeight: location.pathname === item.route ? 600 : 400
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+            />
+          </ListItemButton>
+        </ListItem>
+      ))}
+  </React.Fragment>
+))}
+
       </List>
 
       <Divider />
