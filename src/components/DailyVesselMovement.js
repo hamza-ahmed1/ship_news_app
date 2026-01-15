@@ -16,7 +16,7 @@ import {
 } from "@mui/icons-material";
 import Navbar from "./Navbar";
 
-export default function DailyVesselMovement() {
+export default function DailyVesselMovement({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -48,7 +48,7 @@ export default function DailyVesselMovement() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Navbar />
+      <Navbar user={user} />
 
       {/* Header */}
       <Paper elevation={3} sx={{ p: 3, mb: 3, bgcolor: 'primary.main', color: 'white' }}>

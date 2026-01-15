@@ -19,27 +19,17 @@ import { auth, db } from "../firebase/config";
 import { signOut } from "firebase/auth";
 
 export default function Navbar() {
-const [anchorEl, setAnchorEl] = useState(null);
-const open = Boolean(anchorEl);
-
-const handleMouseEnter = (event) => {
-  setAnchorEl(event.currentTarget);
-};
-
-const handleMouseLeave = () => {
-  setAnchorEl(null);
-};
-
-const handlePortSelect = (port) => {
-  setAnchorEl(null);
-  navigate(`/daily-vessel-movement/${port}`);
-};
-
-
       const navigate = useNavigate();
       const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/");
+    try {
+      await signOut(auth);
+      if (setUser) {
+        setUser(null);
+      }
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
     return (
        <>
@@ -163,15 +153,25 @@ const handlePortSelect = (port) => {
           LOGIN
         </button> */}
          <Box sx={{ mb: 2, display: 'flex', gap: 1 , padding: "10px 22px",}}>
-                  <Button 
-                    color="error"
-                    cursor="pointer"
-                    variant="outlined"
-                    // right: "40px",
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </Button>
+                  {user ? (
+                    <Button 
+                      color="error"
+                      cursor="pointer"
+                      variant="outlined"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  ) : (
+                    <Button 
+                      color="primary"
+                      cursor="pointer"
+                      variant="outlined"
+                      onClick={() => navigate("/signin")}
+                    >
+                      Login
+                    </Button>
+                  )}
                 
              </Box>
       </div>

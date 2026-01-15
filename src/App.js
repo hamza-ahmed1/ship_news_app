@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import Home from './components/home';
 import SignIn from './components/signin';
+import SignUp from './components/signup';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { auth } from './firebase/config';
 import React from 'react';
@@ -43,11 +44,13 @@ if (loading) {
   return (
     <Router>
       <Routes>
-        <Route path="/" element=  {!user ? <SignIn setUser={setUser}/> : <Home />} />
-        <Route path="/home" element={user ? <Home /> : <SignIn setUser={setUser}/>} />
-        <Route path="/latest-news" element={user ? <LatestNews /> : <SignIn setUser={setUser}/>} />
+        <Route path="/" element={<Home setUser={setUser} user={user} />} />
+        <Route path="/signin" element={!user ? <SignIn setUser={setUser}/> : <Home setUser={setUser} user={user}/>} />
+        <Route path="/signup" element={<SignUp setUser={setUser}/>} />
+        <Route path="/home" element={user ? <Home setUser={setUser} user={user}/> : <SignIn setUser={setUser}/>} />
+        <Route path="/latest-news" element={user ? <LatestNews user={user} /> : <SignIn setUser={setUser}/>} />
         <Route path="/admin-panel" element={user ? <AdminPanel /> : <SignIn setUser={setUser}/>} />
-        <Route path="/daily-vessel-movement" element={user ? <DailyVesselMovement /> : <SignIn setUser={setUser}/>} />
+        <Route path="/daily-vessel-movement" element={user ? <DailyVesselMovement user={user} /> : <SignIn setUser={setUser}/>} />
         {/* for Port Qasim Updates routes */}
         {/* <Route path='/admin/vessel-updates/port-qasim' element={user ? <VesselDailyUpdate/>:<SignIn setUser={setUser}/>} />
          */}
