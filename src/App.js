@@ -10,6 +10,7 @@ import AdminPanel from './components/AdminPanel/AdminPanel';
 import DailyVesselMovement from './components/DailyVesselMovement';
 import { CircularProgress, Box } from "@mui/material";
 import VesselDailyUpdate from './components/AdminPanel/PortQasim';
+import MainPagePortQasim from './components/PortQasim/mainpage';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -48,7 +49,9 @@ if (loading) {
         <Route path="/admin-panel" element={user ? <AdminPanel /> : <SignIn setUser={setUser}/>} />
         <Route path="/daily-vessel-movement" element={user ? <DailyVesselMovement /> : <SignIn setUser={setUser}/>} />
         {/* for Port Qasim Updates routes */}
-        <Route path='/admin/vessel-updates/port-qasim' element={user ? <VesselDailyUpdate/>:<SignIn setUser={setUser}/>} />
+        {/* <Route path='/admin/vessel-updates/port-qasim' element={user ? <VesselDailyUpdate/>:<SignIn setUser={setUser}/>} />
+         */}
+         <Route path='/daily-vessel-movement/port-qasim' element={user ? <MainPagePortQasim /> :<SignIn setUser={setUser}/>} />
 
       </Routes>
     </Router>
