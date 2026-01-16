@@ -1,16 +1,15 @@
 import * as React from 'react';
 import { useState } from 'react';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { auth } from '../firebase/config';
@@ -20,8 +19,19 @@ import {
 } from 'firebase/auth';
 
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
-const defaultTheme = createTheme();
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#0a4d68',
+    },
+    secondary: {
+      main: '#088395',
+    },
+  },
+});
 
 // Popular country codes
 const countryCodes = [
@@ -47,20 +57,15 @@ export default function SignUp({ setUser }) {
   };
 
   const validatePhone = (phone) => {
-    // Remove spaces and dashes
     const cleaned = phone.replace(/[\s-]/g, '');
-    // Check if it contains only digits and is between 7-15 characters
     return /^\d{7,15}$/.test(cleaned);
   };
 
   const validateName = (name) => {
-    // Check if name contains only letters, spaces, hyphens, and apostrophes
-    // At least 2 characters
     return /^[a-zA-Z\s'-]{2,}$/.test(name.trim());
   };
 
   const validatePassword = (password) => {
-    // At least 6 characters (Firebase requirement)
     return password.length >= 6;
   };
 
@@ -75,42 +80,36 @@ export default function SignUp({ setUser }) {
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
 
-    // First name validation
     if (!firstName) {
       newErrors.firstName = 'First name is required';
     } else if (!validateName(firstName)) {
       newErrors.firstName = 'Please enter a valid first name';
     }
 
-    // Last name validation
     if (!lastName) {
       newErrors.lastName = 'Last name is required';
     } else if (!validateName(lastName)) {
       newErrors.lastName = 'Please enter a valid last name';
     }
 
-    // Email validation
     if (!email) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Phone validation
     if (!phone) {
       newErrors.phone = 'Phone number is required';
     } else if (!validatePhone(phone)) {
       newErrors.phone = 'Please enter a valid phone number (7-15 digits)';
     }
 
-    // Password validation
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (!validatePassword(password)) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    // Confirm password validation
     if (!confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (password !== confirmPassword) {
@@ -125,7 +124,6 @@ export default function SignUp({ setUser }) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
 
-    // Validate form
     const formErrors = validateForm(data);
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -141,21 +139,9 @@ export default function SignUp({ setUser }) {
         data.get('password')
       );
 
-      // Update user profile with name
       await updateProfile(userCredential.user, {
         displayName: `${data.get('firstName').trim()} ${data.get('lastName').trim()}`
       });
-
-      // Here you can save additional data (phone, company) to Firestore if needed
-      // Example:
-      // await setDoc(doc(db, "users", userCredential.user.uid), {
-      //   firstName: data.get('firstName').trim(),
-      //   lastName: data.get('lastName').trim(),
-      //   phone: `${countryCode}${data.get('phone').trim()}`,
-      //   companyName: data.get('companyName')?.trim() || '',
-      //   email: data.get('email').trim(),
-      //   createdAt: new Date()
-      // });
 
       setUser(userCredential.user);
       navigate('/home');
@@ -165,155 +151,302 @@ export default function SignUp({ setUser }) {
       } else if (error.code === 'auth/weak-password') {
         setErrors({ password: 'Password is too weak' });
       } else {
-        alert(error.message);
+        setErrors({ general: 'Failed to create account. Please try again.' });
       }
     }
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-
-          <Typography component="h1" variant="h5">
-            Sign Up
-          </Typography>
-
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  name="firstName"
-                  label="First Name"
-                  autoComplete="given-name"
-                  error={!!errors.firstName}
-                  helperText={errors.firstName}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  name="lastName"
-                  label="Last Name"
-                  autoComplete="family-name"
-                  error={!!errors.lastName}
-                  helperText={errors.lastName}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="email"
-                  label="Email Address"
-                  type="email"
-                  autoComplete="email"
-                  error={!!errors.email}
-                  helperText={errors.email}
-                />
-              </Grid>
-
-              <Grid item xs={4}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Code"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                >
-                  {countryCodes.map((option) => (
-                    <MenuItem key={option.code} value={option.code}>
-                      {option.code}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={8}>
-                <TextField
-                  required
-                  fullWidth
-                  name="phone"
-                  label="Phone Number"
-                  type="tel"
-                  autoComplete="tel"
-                  error={!!errors.phone}
-                  helperText={errors.phone}
-                  placeholder="3001234567"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  name="companyName"
-                  label="Company Name (Optional)"
-                  autoComplete="organization"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  autoComplete="new-password"
-                  error={!!errors.password}
-                  helperText={errors.password}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  autoComplete="new-password"
-                  error={!!errors.confirmPassword}
-                  helperText={errors.confirmPassword}
-                />
-              </Grid>
-            </Grid>
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+    <ThemeProvider theme={theme}>
+      <Navbar/>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #0a4d68 0%, #088395 50%, #0d7c92 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 2,
+          paddingY: 4
+        }}
+      >
+        <Container component="main" maxWidth="sm">
+          <CssBaseline />
+          <Paper
+            elevation={24}
+            sx={{
+              padding: 4,
+              borderRadius: 3,
+              background: 'white'
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
             >
-              Sign Up
-            </Button>
+              {/* Logo */}
+              <Box
+                sx={{
+                  mb: 1.5,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}
+              >
+                <img 
+                  src="/assets/logo.png" 
+                  alt="Wharf Logo" 
+                  style={{ height: "70px", width: "auto" }}
+                />
+              </Box>
 
-            <Grid container justifyContent="flex-end">
-              <Grid item>
-                <Link href="/signin" variant="body2">
-                  Already have an account? Sign In
-                </Link>
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-      </Container>
+              <Typography 
+                component="h1" 
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#0a4d68',
+                  marginBottom: 0.5,
+                  fontSize: '22px'
+                }}
+              >
+                Create Account
+              </Typography>
+
+              <Typography 
+                variant="body2"
+                sx={{
+                  color: '#666',
+                  marginBottom: 2.5,
+                  textAlign: 'center',
+                  fontSize: '13px'
+                }}
+              >
+                Join Pakistan's leading maritime information platform
+              </Typography>
+
+              <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%' }}>
+                <Grid container spacing={1.5}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="firstName"
+                      label="First Name"
+                      autoComplete="given-name"
+                      error={!!errors.firstName}
+                      helperText={errors.firstName}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="lastName"
+                      label="Last Name"
+                      autoComplete="family-name"
+                      error={!!errors.lastName}
+                      helperText={errors.lastName}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="email"
+                      label="Email Address"
+                      type="email"
+                      autoComplete="email"
+                      error={!!errors.email}
+                      helperText={errors.email}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <TextField
+                      select
+                      fullWidth
+                      size="small"
+                      label="Code"
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    >
+                      {countryCodes.map((option) => (
+                        <MenuItem key={option.code} value={option.code}>
+                          {option.code}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <Grid item xs={8}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="phone"
+                      label="Phone Number"
+                      type="tel"
+                      autoComplete="tel"
+                      error={!!errors.phone}
+                      helperText={errors.phone}
+                      placeholder="3001234567"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="companyName"
+                      label="Company Name (Optional)"
+                      autoComplete="organization"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="password"
+                      label="Password"
+                      type="password"
+                      autoComplete="new-password"
+                      error={!!errors.password}
+                      helperText={errors.password}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      size="small"
+                      name="confirmPassword"
+                      label="Confirm Password"
+                      type="password"
+                      autoComplete="new-password"
+                      error={!!errors.confirmPassword}
+                      helperText={errors.confirmPassword}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                        }
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ 
+                    mt: 2.5, 
+                    mb: 2,
+                    py: 1.2,
+                    borderRadius: 2,
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, #0a4d68 0%, #088395 100%)',
+                    boxShadow: '0 4px 15px rgba(10, 77, 104, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #083d54 0%, #076a7a 100%)',
+                      boxShadow: '0 6px 20px rgba(10, 77, 104, 0.4)',
+                    }
+                  }}
+                >
+                  Create Account
+                </Button>
+
+                <Grid container justifyContent="center">
+                  <Grid item>
+                    <Link 
+                      href="/signin" 
+                      variant="body2"
+                      sx={{
+                        color: '#0a4d68',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        '&:hover': {
+                          color: '#088395'
+                        }
+                      }}
+                    >
+                      Already have an account? Sign In
+                    </Link>
+                  </Grid>
+                </Grid>
+
+                {/* Back to Home */}
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Link
+                    href="/"
+                    variant="body2"
+                    sx={{
+                      color: '#666',
+                      fontSize: '13px',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        color: '#0a4d68',
+                        textDecoration: 'underline'
+                      }
+                    }}
+                  >
+                    ← Back to Home
+                  </Link>
+                </Box>
+              </Box>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
+      <Footer/>
     </ThemeProvider>
   );
 }

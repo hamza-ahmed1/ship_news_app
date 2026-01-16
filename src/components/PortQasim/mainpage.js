@@ -7,6 +7,12 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Navbar from '../Navbar';
+import ExpectedShipArrivalAtOuterAnchorage from './shiparrival';
+import Footer from '../Footer';
+import OffPort from './offport';
+import BerthWiseCargoHandling from './Berthwise';
+import DailyShippingProgram from './dailyship';
+import PortQasimReports from './reports';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -27,24 +33,10 @@ function TabPanel(props) {
     </div>
   );
 }
-function ExpectedShipArrivalAtOuterAnchorage() {
-  return <div>Arrivals Component</div>;
-}
 
-function OffPort() {
-  return <div>Off Port Component</div>;
-}
 
-function DailyShippingProgram() {
-  return <div>Daily Shipping Program Component</div>;
-}
-function BerthWiseCargoHandling() {
-  return <div>Berth Wise Cargo Handling Component</div>;
-}
- function DailyShippingandCargoHandlingReporst() {
-  return <div>Daily Shipping and Cargo Handling Reports Component</div>;
-}
 
+ 
 
 TabPanel.propTypes = {
   children: PropTypes.node,
@@ -93,7 +85,7 @@ export default function MainPagePortQasim() {
 
         {/* TAB CONTENT */}
         <TabPanel value={value} index={0} dir={theme.direction}>
-          <ExpectedShipArrivalAtOuterAnchorage />
+          <ExpectedShipArrivalAtOuterAnchorage/>
         </TabPanel>
 
         <TabPanel value={value} index={1} dir={theme.direction}>
@@ -101,15 +93,16 @@ export default function MainPagePortQasim() {
         </TabPanel>
 
         <TabPanel value={value} index={2} dir={theme.direction}>
-          <DailyShippingProgram />
+        <DailyShippingProgram/>
         </TabPanel>
         <TabPanel value={value} index={3} dir={theme.direction}>
-          <BerthWiseCargoHandling />
+         <BerthWiseCargoHandling />
         </TabPanel>
         <TabPanel value={value} index={4} dir={theme.direction}>
-            <DailyShippingandCargoHandlingReporst />
+          <PortQasimReports/>
         </TabPanel>
       </Box>
+      <Footer/>
     </>
   );
 }

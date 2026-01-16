@@ -1,180 +1,174 @@
+import React, { useState, useEffect } from "react";
 import {
-  AppBar,
-  Toolbar,
+  Box,
   Typography,
   Button,
-  Box,
-  Select,
-  MenuItem,
-  Menu
+  Menu,
+  MenuItem
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import React, { useState } from "react";
-
-// create a navbar with home, latest news, admin panel links
-import { Link } from "react-router-dom";
-import { Ship } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase/config";
-import { signOut } from "firebase/auth";
+import { Bold, Ship } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { auth } from "../firebase/config";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 
 export default function Navbar() {
-      const navigate = useNavigate();
-      const handleLogout = async () => {
+  const navigate = useNavigate();
+
+  /* ================= STATES ================= */
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const [user, setUser] = useState(null);
+
+  /* ================= FIREBASE AUTH LISTENER ================= */
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  /* ================= DROPDOWN HANDLERS ================= */
+  const handleMouseEnter = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMouseLeave = () => {
+    setAnchorEl(null);
+  };
+
+  const handlePortSelect = (port) => {
+    handleMouseLeave();
+    navigate(`/daily-vessel-movement/${port}`);
+  };
+
+  /* ================= LOGOUT ================= */
+  const handleLogout = async () => {
     try {
       await signOut(auth);
-      if (setUser) {
-        setUser(null);
-      }
+      setUser(null);
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
-    return (
-       <>
-            {/* ==================== FIRST ROW: LOGO ==================== */}
-      <div
-        style={{
-          padding: "20px 0",
-          textAlign: "center",
-          borderBottom: "1px solid #eee"
-        }}
-      >
-        <Ship size={45} color="#0a4d68" />
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "34px",
-            color: "#0a4d68",
-            fontWeight: "800"
-          }}
-        >
-          Wharf
-        </h1>
-      </div>
 
-      {/* ==================== SECOND ROW: NAVBAR ==================== */}
-      <div
-        style={{
+  return (
+    <>
+      {/* ==================== FIRST ROW: LOGO ==================== */}
+    {/* ==================== FIRST ROW: LOGO ==================== */}
+      <Box
+        sx={{
+          py: -9,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          padding: "18px 40px",
+          borderBottom: "1px solid #eee"
+        }}
+      >
+        <img 
+          src="/assets/logo.png" 
+          alt="Wharf Logo" 
+          style={{ height: "9rem", width: "auto" }}
+        />
+      </Box>
+
+      {/* ==================== SECOND ROW: NAVBAR ==================== */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          px: 5,
+          py: 3,
           borderBottom: "1px solid #eee",
+          backgroundColor: "#f7c961",
           position: "relative"
         }}
       >
-        <div style={{ display: "flex", gap: "40px", fontSize: "18px" }}>
-          <a href="/home" style={{ color: "#0a4d68", textDecoration: "none", fontWeight: "600" }}>Home</a>
-          <a href="/latest-news" style={{ color: "#0a4d68", textDecoration: "none", fontWeight: "600" }}>LatestNews</a>
+        {/* ===== NAV LINKS ===== */}
+        <Box sx={{ display: "flex", gap: 5, fontSize: "18px" }}>
+          <Link to="/home" style={linkStyle}>Home</Link>
+          <Link to="/latest-news" style={linkStyle}>Latest News</Link>
+
+          {/* ===== DROPDOWN ===== */}
+          <Box
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            sx={{ position: "relative" }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                color: "#0a4d68",
+                fontWeight: 100,
+                "&:hover": { textDecoration: "underline" }
+              }}
+            >
+              {/* make it bold text */}
+              <Typography component="span" sx={{ fontWeight: "bold" }}>
+                Daily Vessel Movement
+              </Typography>
+              <KeyboardArrowDownIcon fontSize="small" />
+            </Box>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleMouseLeave}
+              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+              transformOrigin={{ vertical: "top", horizontal: "left" }}
+              MenuListProps={{ onMouseLeave: handleMouseLeave }}
+            >
+              <MenuItem onClick={() => handlePortSelect("port-qasim")}>
+                Port Qasim
+              </MenuItem>
+              <MenuItem onClick={() => handlePortSelect("karachi-port-trust")}>
+                Karachi Port Trust
+              </MenuItem>
+            </Menu>
+          </Box>
+          <Link to="/about" style={linkStyle}>About Us</Link>
+
+          <Link to="/contact" style={linkStyle}>Contact</Link>
+        </Box>
+
+        {/* ===== LOGIN / LOGOUT ===== */}
         <Box
-  onMouseEnter={handleMouseEnter}
-  onMouseLeave={handleMouseLeave}
-  sx={{ position: "relative" }}
->
-  <Box
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: "4px",
-      cursor: "pointer",
-      color: "#0a4d68",
-      fontWeight: 600,
-      fontSize: "18px",
-      "&:hover": { textDecoration: "underline" }
-    }}
-  >
-    <Typography component="span" sx={{ fontWeight: 600 }}>
-      Daily Vessel Movement
-    </Typography>
-    <KeyboardArrowDownIcon fontSize="small" />
-  </Box>
-
-  <Menu
-    anchorEl={anchorEl}
-    open={open}
-    onClose={handleMouseLeave}
-    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-    transformOrigin={{ vertical: "top", horizontal: "left" }}
-    MenuListProps={{ onMouseLeave: handleMouseLeave }}
-  >
-    <MenuItem onClick={() => handlePortSelect("port-qasim")}>
-      Port Qasim
-    </MenuItem>
-    <MenuItem onClick={() => handlePortSelect("karachi-port-trust")}>
-      Karachi Port Trust
-    </MenuItem>
-  </Menu>
-</Box>
-
-
-
-
-          {/* gotto admin */}
-          {/* <a href="/admin-panel" style={{ color: "#0a4d68", textDecoration: "none", fontWeight: "600" }}>AdminPanel</a> */}
-          <a href="#" style={{ color: "#0a4d68", textDecoration: "none", fontWeight: "600" }}>Contact</a>
-          {/* <a href="#" style={{ color: "#0a4d68", textDecoration: "none", fontWeight: "600" }}>Advertise</a> */}
-        </div>
-
-        {/* <button
-          style={{
+          sx={{
             position: "absolute",
-            right: "40px",
-            background: "#0a4d68",
-            color: "white",
-            border: "none",
-            padding: "10px 22px",
-            borderRadius: "6px",
-            fontSize: "15px",
-            cursor: "pointer"
+            right: 40
           }}
         >
-          LOGIN
-        </button> */}
-              {/* <button
-          style={{
-            position: "absolute",
-            right: "40px",
-            background: "#0a4d68",
-            color: "white",
-            border: "none",
-            padding: "10px 22px",
-            borderRadius: "6px",
-            fontSize: "15px",
-            cursor: "pointer",
-            variant:"outlined",
-                    color:"red" 
-                    
-          }}
-
-          onClick={handleLogout}
-        >
-          LOGIN
-        </button> */}
-         <Box sx={{ mb: 2, display: 'flex', gap: 1 , padding: "10px 22px",}}>
-                  {user ? (
-                    <Button 
-                      color="error"
-                      cursor="pointer"
-                      variant="outlined"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </Button>
-                  ) : (
-                    <Button 
-                      color="primary"
-                      cursor="pointer"
-                      variant="outlined"
-                      onClick={() => navigate("/signin")}
-                    >
-                      Login
-                    </Button>
-                  )}
-                
-             </Box>
-      </div>
-       </>
-    );
+          {user ? (
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button
+              color="primary"
+              variant="outlined"
+              onClick={() => navigate("/signin")}
+            >
+              Login
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </>
+  );
 }
+
+/* ==================== STYLES ==================== */
+const linkStyle = {
+  color: "#0a4d68",
+  textDecoration: "none",
+  fontWeight: 600
+};
