@@ -4,7 +4,9 @@ import {
   Typography,
   Button,
   Menu,
-  MenuItem
+  MenuItem,
+  Avatar,
+  Chip
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Bold, Ship } from "lucide-react";
@@ -140,22 +142,84 @@ export default function Navbar() {
         <Box
           sx={{
             position: "absolute",
-            right: 40
+            right: 40,
+            display: "flex",
+            alignItems: "center",
+            gap: 2
           }}
         >
           {user ? (
-            <Button
-              color="error"
-              variant="outlined"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
+            <>
+              {/* User Profile Section */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  backgroundColor: "rgba(255, 255, 255, 0.7)",
+                  px: 2,
+                  py: 1,
+                  borderRadius: "20px",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    backgroundColor: "#0a4d68",
+                    fontSize: "16px",
+                    fontWeight: "bold"
+                  }}
+                >
+                  {user.email?.charAt(0).toUpperCase() || "U"}
+                </Avatar>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#666",
+                      fontSize: "12px",
+                      fontWeight: 500
+                    }}
+                  >
+                    Welcome back,
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#0a4d68",
+                      fontSize: "14px",
+                      fontWeight: 600
+                    }}
+                  >
+                    {user.displayName || user.email?.split("@")[0]}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Logout Button */}
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleLogout}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600
+                }}
+              >
+                Logout
+              </Button>
+            </>
           ) : (
             <Button
               color="primary"
               variant="outlined"
               onClick={() => navigate("/signin")}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600
+              }}
             >
               Login
             </Button>
